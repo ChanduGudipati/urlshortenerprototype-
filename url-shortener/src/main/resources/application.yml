@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: url-shortener
+  datasource:
+    # Defaults to in-memory H2 so the app runs with zero setup.
+    # docker-compose overrides these to use PostgreSQL.
+    url: ${DB_URL:jdbc:h2:mem:urlshortener;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none   # Flyway owns the schema
+  flyway:
+    enabled: true
+  cache:
+    type: caffeine
+    cache-names: redirects
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=10m
+  task:
+    execution:
+      thread-name-prefix: analytics-
+      pool:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 10000
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  code-length: 7
+  max-generation-attempts: 5
+  rate-limit-per-minute: ${RATE_LIMIT_PER_MINUTE:30}
+  blocked-domains:
+    - malware.example
+    - phishing.example
